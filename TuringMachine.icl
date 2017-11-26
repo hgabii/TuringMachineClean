@@ -45,9 +45,18 @@ class Machine t where
 
 :: TuringMachine a = TM State (Zipper a) (Int a -> (State, a, Movement))
 
+instance Machine TuringMachine where
+	done (TM (InState _) _ _) = False
+	done (TM Accepted _ _) = True
+	done (TM Rejected _ _) = True
+	
+	tape (TM _ (Z a b) _) = Z a b
+	step (TM (InState s) (Z a b) f) = f s (read Z a b)
+
 // ############
 
-Start = [test_fromList, test_read, test_write, test_move, test_around, test_fromListInf]
+Start = [test_fromList, test_read, test_write, test_move, test_around, test_fromListInf,
+	 test_done, test_tape]
 
 test_fromList =
 	[ fromList empty === Z [] []
@@ -89,4 +98,14 @@ test_fromListInf =
 	[ let (Z xs ys) = fromListInf 0 [1..5]
 	in take 100 xs == repeatn 100 0
 	&& take 100 ys == [1..5] ++ repeatn 95 0
+	]
+	
+test_done =
+	[ not (done (TM (InState 0) undef undef))
+	, done (TM Accepted undef undef)
+	, done (TM Rejected undef undef)
+	]
+	
+test_tape =
+	[ tape (TM Accepted (fromList [1..5]) undef) === fromList [1..5]
 	]
