@@ -61,10 +61,21 @@ instance Machine TuringMachine where
 				TM state ( move direction (write newSymbol (Z prevElements nextElements)) ) f
 
 run :: (t a) -> [t a] | Machine t
-run test = [replicate test]
+run machine = execute machine
 	where
-		replicate :: (TuringMachine a) -> TuringMachine a
-		replicate asd = asd
+		execute :: (t a) -> [t a] | Machine t
+		execute m
+			| (done m) == True = [m]
+			| otherwise = [m] ++ (execute (step m))
+
+toArray list ={e \\ e <- list}
+toList array =[e \\ e <-: array]
+
+showStates :: (t Char) -> [String] | Machine t
+showStates machine = map getPartOfTape (run machine)
+	where
+		getPartOfTape m = toString (around 5 (tape m)) 
+
 
 // ############
 
@@ -73,7 +84,7 @@ Test list = 1
 
 
 Start = [test_fromList, test_read, test_write, test_move, test_around, test_fromListInf,
-	 test_done, test_tape, test_step, test_run]
+	 test_done, test_tape, test_step, test_run, test_showStates]
 
 test_fromList =
 	[ fromList empty === Z [] []
@@ -162,7 +173,29 @@ test_run =
     f 1 'x' = (Accepted,  'x', Stay)
     f _ ch  = (Rejected,  '!', Stay)
 
-	
+test_showStates =
+  [ showStates (tm ['a','b','x','x'])
+    == [ "     abxx  "
+       , "    bbxx   "
+       , "   baxx    "
+       , "  baxx     "
+       , "  baxx     "
+       ]
+  , showStates (tm ['a','b','x','a'])
+    == [ "     abxa  "
+       , "    bbxa   "
+       , "   baxa    "
+       , "  baxa     "
+       , "  bax!     "
+       ]
+  ]
+    where
+      tm xs = TM (InState 0) (fromListInf ' ' xs) f
+      f 0 'a' = (InState 0, 'b', Forward)
+      f 0 'b' = (InState 0, 'a', Forward)
+      f 0 'x' = (InState 1, 'x', Forward)
+      f 1 'x' = (Accepted,  'x', Stay)
+      f _ ch  = (Rejected,  '!', Stay)
 	
 	
 	

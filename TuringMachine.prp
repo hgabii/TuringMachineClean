@@ -7,9 +7,9 @@ MainModule
 		WindowPosition
 			X:	9
 			Y:	8
-			SizeX:	908
-			SizeY:	695
-	IclOpen:	False
+			SizeX:	1349
+			SizeY:	644
+	IclOpen:	True
 OtherModules
 	Module
 		Name:	StdArrayExtensions
