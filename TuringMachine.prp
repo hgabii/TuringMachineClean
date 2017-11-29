@@ -8,8 +8,8 @@ MainModule
 			X:	9
 			Y:	8
 			SizeX:	908
-			SizeY:	746
-	IclOpen:	True
+			SizeY:	695
+	IclOpen:	False
 OtherModules
 	Module
 		Name:	StdArrayExtensions

@@ -13,11 +13,10 @@ where
 
 fromList :: [a] -> Zipper a
 fromList [] = Z [] []
-fromList [x:xs] =  Z [] [x:xs]
+fromList list =  Z [] list
 
 read :: (Zipper a) -> a
-read (Z [] [y:ys]) = y
-read (Z [x:xs] [y:ys]) = y
+read (Z _ list) = hd list
 
 write :: a (Zipper a) -> Zipper a
 write newElement (Z [] [y:ys]) = Z [] [newElement:ys]
@@ -26,15 +25,17 @@ write newElement (Z [x:xs] [y:ys]) = Z [x:xs] [newElement:ys]
 :: Movement = Forward | Backward | Stay
 
 move :: Movement (Zipper a) -> Zipper a
-move Stay (a) = a
-move Forward (Z [x:xs] [y:ys]) = Z [y:x:xs] (tl [y:ys])
-move Backward (Z [x:xs] [y:ys]) = Z (tl [x:xs]) [x:y:ys]
+move Stay (zipper) = zipper
+move Forward (Z prevElements [y:ys]) = Z [y:prevElements] (tl [y:ys])
+move Backward (Z [x:xs] nextElements) = Z (tl [x:xs]) [x:nextElements]
 
 around :: Int (Zipper a) -> [a]
-around r (Z a b) = (reverse (take r a)) ++ (take (r + 1) b)
+around radius (Z prevElemets nextElements) = 
+	(reverse (take radius prevElemets)) ++ (take (radius + 1) nextElements)
 
 fromListInf :: a [a] -> Zipper a
-fromListInf e a = Z (repeat e) (a ++ repeat e)
+fromListInf repeatingElement list = 
+	Z (repeat repeatingElement) (list ++ repeat repeatingElement) 
 
 class Machine t where
 	done :: (t a) -> Bool
@@ -50,13 +51,29 @@ instance Machine TuringMachine where
 	done (TM Accepted _ _) = True
 	done (TM Rejected _ _) = True
 	
-	tape (TM _ (Z a b) _) = Z a b
-	step (TM (InState s) (Z a b) f) = f s (read Z a b)
+	tape (TM _ (Z prevElements nextElements) _) = Z prevElements nextElements
+	
+	step (TM (InState s) (Z prevElements nextElements) f) = 
+		tapeStep (f s (read (Z prevElements nextElements)))
+		where
+			//tapeStep :: (State, a, Movement) -> TuringMachine a
+			tapeStep (state, newSymbol, direction) = 
+				TM state ( move direction (write newSymbol (Z prevElements nextElements)) ) f
+
+run :: (t a) -> [t a] | Machine t
+run test = [replicate test]
+	where
+		replicate :: (TuringMachine a) -> TuringMachine a
+		replicate asd = asd
 
 // ############
 
+Test :: [Int] -> Int
+Test list = 1
+
+
 Start = [test_fromList, test_read, test_write, test_move, test_around, test_fromListInf,
-	 test_done, test_tape]
+	 test_done, test_tape, test_step, test_run]
 
 test_fromList =
 	[ fromList empty === Z [] []
@@ -109,3 +126,59 @@ test_done =
 test_tape =
 	[ tape (TM Accepted (fromList [1..5]) undef) === fromList [1..5]
 	]
+	
+test_step =
+	[ let m = step (TM (InState 0) (fromList ['a','b']) f)
+	in  not (done m)
+	&& tape m === Z ['b'] ['b']
+	, let m = step (TM (InState 0) (fromList ['b','b']) f)
+	in  not (done m)
+	&& tape m === Z ['a'] ['b']
+	, let m = step (TM (InState 1) (fromList ['a','b']) f)
+	in  done m
+	&& tape m === fromList ['x','b']
+	]
+	where
+		f 0 'a' = (InState 0, 'b', Forward)
+		f 0 'b' = (InState 0, 'a', Forward)
+		f 1 _   = (Accepted,  'x', Stay)
+	
+test_run =
+  [ let m = last (run (tm ['a','b','x','x']))
+    in done m
+       && tape m === Z ['x','a','b'] ['x']
+  , let m = last (run (tm ['b','a','x','x']))
+    in done m
+       && tape m === Z ['x','b','a'] ['x']
+  , let m = last (run (tm ['a','b','x','a']))
+    in done m
+       && tape m === Z ['x','a','b'] ['!']
+  ]
+  where
+    tm xs = TM (InState 0) (fromList xs) f
+    f 0 'a' = (InState 0, 'b', Forward)
+    f 0 'b' = (InState 0, 'a', Forward)
+    f 0 'x' = (InState 1, 'x', Forward)
+    f 1 'x' = (Accepted,  'x', Stay)
+    f _ ch  = (Rejected,  '!', Stay)
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
