@@ -1,5 +1,8 @@
 # TuringMachineClean
-Homework in Clean programming language for ELTE Functional Programming course
+Homework in Clean programming language for ELTE Functional Programming course.
+
+Exercise description in Hungarian:
+---
 
 <div style="margin-left:0px; background: lightgray"><h1 id="beadandó-turing-gépek">2. beadandó: Turing-gépek</h1>
 <p><em>A feladatok egymásra épülnek, ezért a megadásuk sorrendjében kell ezeket megoldani! A függvények definíciójában lehet, sőt javasolt is alkalmazni a korábban definiált függvényeket.</em></p>
